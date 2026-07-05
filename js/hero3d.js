@@ -128,7 +128,7 @@
   nodeIM.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(NODE_COUNT*3), 3);
   scene.add(nodeIM);
 
-  // per-node colour palette (fixed)
+  // per-node colour palette (fixed) — light theme
   const NODE_COLORS = [];
   const palette = [BLUE, CYAN, SKY, PURPLE, PALE];
   for(let i=0;i<NODE_COUNT;i++){
@@ -138,17 +138,21 @@
   nodeIM.instanceColor.needsUpdate = true;
   nodeMat.vertexColors = true;
 
-  // Theme-aware node colouring: use yellow nodes in dark theme instead of black
+  // per-node colour palette — dark theme (deep-orange family, matches the site's dark colour scheme)
+  const ORANGE_DEEP   = new THREE.Color(0xFF4B00);
+  const ORANGE_BRIGHT = new THREE.Color(0xFF8A2E);
+  const ORANGE_AMBER  = new THREE.Color(0xFFA23D);
+  const NODE_COLORS_DARK = [];
+  const darkPalette = [ORANGE_DEEP, ORANGE_BRIGHT, ORANGE_AMBER, ORANGE_DEEP, ORANGE_BRIGHT];
+  for(let i=0;i<NODE_COUNT;i++){
+    NODE_COLORS_DARK.push(darkPalette[i%darkPalette.length].clone());
+  }
+
+  // Theme-aware node colouring: deep orange nodes in dark theme, brand-blue in light theme
   function applyNodeThemeColors(theme){
-    if(theme === 'dark'){
-      const yellow = new THREE.Color(0xFFD700);
-      for(let i=0;i<NODE_COUNT;i++){
-        yellow.toArray(nodeIM.instanceColor.array, i*3);
-      }
-    } else {
-      for(let i=0;i<NODE_COUNT;i++){
-        NODE_COLORS[i].toArray(nodeIM.instanceColor.array, i*3);
-      }
+    const src = theme === 'dark' ? NODE_COLORS_DARK : NODE_COLORS;
+    for(let i=0;i<NODE_COUNT;i++){
+      src[i].toArray(nodeIM.instanceColor.array, i*3);
     }
     nodeIM.instanceColor.needsUpdate = true;
   }
@@ -398,12 +402,15 @@
     updateEdgeGeo(noisePosArr, NOISE_EDGES);
     noiseEdgeGeo.attributes.position.needsUpdate = true;
 
-    /* ── 4. node colour: shift toward warmer in messy, cooler in smooth ── */
+    /* ── 4. node colour: shift toward warmer in messy, cooler/settled in smooth ── */
     const smoothness = phase===2 ? 1 : phase===1 ? easeInOut(phaseT) : phase===3 ? 1-easeIn(phaseT) : 0;
+    const isDarkTheme = currentTheme() === 'dark';
+    const baseColors = isDarkTheme ? NODE_COLORS_DARK : NODE_COLORS;
+    const messyTarget = isDarkTheme ? PURPLE : new THREE.Color(0xB23368);
     for(let i=0;i<NODE_COUNT;i++){
-      const base = NODE_COLORS[i];
-      // in smooth: stay brand-blue/cyan; in messy: tint toward magenta/purple
-      const messy = base.clone().lerp(new THREE.Color(0xB23368), 0.4);
+      const base = baseColors[i];
+      // in smooth: settle on the theme's brand palette; in messy: tint toward the transition colour
+      const messy = base.clone().lerp(messyTarget, 0.4);
       const col   = messy.lerp(base, smoothness);
       col.toArray(nodeIM.instanceColor.array, i*3);
     }
