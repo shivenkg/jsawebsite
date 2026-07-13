@@ -698,8 +698,12 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;background:var(--nav
 
 /* ===================== INDUSTRIES DETAIL PAGE ===================== */
 .industry-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:20px;overflow:hidden;}
-.industry-card{background:var(--navy-1);padding:36px;transition:background .35s;}
+.industry-card{background:var(--navy-1);transition:background .35s;padding:0;overflow:hidden;}
 .industry-card:hover{background:var(--navy-2);}
+.industry-card .ic-image{width:100%;aspect-ratio:16/10;overflow:hidden;background:var(--navy-2);}
+.industry-card .ic-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s var(--ease);}
+.industry-card:hover .ic-image img{transform:scale(1.06);}
+.industry-card .ic-body{padding:28px 32px 32px;}
 .industry-card .ic-eyebrow{font-family:'JetBrains Mono';font-size:11px;color:var(--blue-bright);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;}
 .industry-card h3{color:var(--heading);font-size:21px;margin-bottom:10px;}
 .industry-card p{font-size:14px;margin-bottom:16px;}

@@ -227,6 +227,86 @@
   scene.add(new THREE.Points(bgGeo, bgMat));
 
   /* ═══════════════════════════════════════════════════
+     HOLOGRAPHIC CORE — a glowing energy source anchored behind
+     the network graph. Purely atmospheric: low-opacity, slow
+     rotation, sits at negative Z so it never competes with the
+     node grid in the foreground.
+     ═══════════════════════════════════════════════════ */
+  const coreGroup = new THREE.Group();
+  coreGroup.position.set(0, 0, -6.5);
+  scene.add(coreGroup);
+
+  const coreColorsByTheme = {
+    dark:  { a: 0xFF4B00, b: 0xFF8A2E },   // deep orange family
+    light: { a: 0x2E9BFF, b: 0x6B2FD6 }    // brand blue → purple
+  };
+
+  // wireframe icosahedron core
+  const coreGeo = new THREE.IcosahedronGeometry(2.3, 1);
+  const coreMat = new THREE.MeshBasicMaterial({
+    color: coreColorsByTheme[currentTheme()].a,
+    wireframe: true, transparent: true, opacity: 0.22
+  });
+  const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+  coreGroup.add(coreMesh);
+
+  // fresnel-style outer glow shell (additive, brighter at the rim)
+  const glowGeo = new THREE.IcosahedronGeometry(2.7, 3);
+  const glowMat = new THREE.ShaderMaterial({
+    uniforms: { cCore: { value: new THREE.Color(coreColorsByTheme[currentTheme()].a) } },
+    vertexShader: `
+      varying vec3 vNormal; varying vec3 vPos;
+      void main(){
+        vNormal = normalize(normalMatrix * normal);
+        vec4 mvPos = modelViewMatrix * vec4(position,1.0);
+        vPos = mvPos.xyz;
+        gl_Position = projectionMatrix * mvPos;
+      }`,
+    fragmentShader: `
+      varying vec3 vNormal; varying vec3 vPos; uniform vec3 cCore;
+      void main(){
+        vec3 viewDir = normalize(-vPos);
+        float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 2.4);
+        gl_FragColor = vec4(cCore, fresnel * 0.35);
+      }`,
+    side: THREE.BackSide, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+  coreGroup.add(glowMesh);
+
+  // HUD-style rings (sci-fi "targeting" accent)
+  const hudRings = [];
+  function makeHudRing(radius, tube, tiltX, tiltZ, colorHex, speed){
+    const geo = new THREE.TorusGeometry(radius, tube, 8, 96);
+    const mat = new THREE.MeshBasicMaterial({color:colorHex, transparent:true, opacity:0.28, blending:THREE.AdditiveBlending, depthWrite:false});
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.set(tiltX, 0, tiltZ);
+    mesh.userData.speed = speed;
+    coreGroup.add(mesh);
+    hudRings.push(mesh);
+  }
+  makeHudRing(3.4, 0.012, Math.PI/2.3, 0.25, coreColorsByTheme[currentTheme()].b, 0.08);
+  makeHudRing(4.0, 0.008, Math.PI/1.8, -0.4, coreColorsByTheme[currentTheme()].a, -0.05);
+
+  function applyCoreTheme(theme){
+    const c = coreColorsByTheme[theme] || coreColorsByTheme.dark;
+    coreMat.color.set(c.a);
+    glowMat.uniforms.cCore.value.set(c.a);
+    hudRings[0].material.color.set(c.b);
+    hudRings[1].material.color.set(c.a);
+  }
+
+  // ─── SCAN SWEEP — a thin bright band drifting top-to-bottom, radar-style ───
+  const sweepGeo = new THREE.PlaneGeometry(26, 0.55);
+  const sweepMat = new THREE.MeshBasicMaterial({
+    color: coreColorsByTheme[currentTheme()].b, transparent: true, opacity: 0.0,
+    blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite:false
+  });
+  const sweepMesh = new THREE.Mesh(sweepGeo, sweepMat);
+  sweepMesh.position.set(0, 6, -3);
+  scene.add(sweepMesh);
+
+  /* ═══════════════════════════════════════════════════
      ANIMATION STATE MACHINE
      ═══════════════════════════════════════════════════
      Phases (looped):
@@ -432,6 +512,24 @@
     flowMat.opacity               *= fade;
     bgMat.opacity                  = 0.30*fade;
 
+    /* ── 7. holographic core: slow independent rotation + HUD rings + scan sweep ── */
+    coreMesh.rotation.y = globalT * 0.09;
+    coreMesh.rotation.x = globalT * 0.05;
+    glowMesh.rotation.y = -globalT * 0.05;
+    hudRings.forEach(r => { r.rotation.z += r.userData.speed * 0.01; });
+    coreGroup.position.x = mouseX * 0.6;
+    coreGroup.position.y = mouseY * -0.35;
+    coreMat.opacity  = 0.22 * fade;
+    glowMat.uniforms && (glowMesh.material.opacity = fade);
+    hudRings.forEach(r => { r.material.opacity = 0.28 * fade; });
+
+    // scan sweep: drifts from top to bottom, fading in/out at the ends of its travel
+    const sweepCycle = 6.5; // seconds per pass
+    const sweepPhase = (globalT % sweepCycle) / sweepCycle;
+    sweepMesh.position.y = 7 - sweepPhase * 14;
+    const edgeFade = Math.sin(sweepPhase * Math.PI); // 0 at top/bottom, 1 mid-travel
+    sweepMat.opacity = 0.10 * edgeFade * fade;
+
     renderer.render(scene, camera);
   }
   animate();
@@ -449,5 +547,6 @@
     bgMat.color.set(bgColorByTheme[theme]);
     // update node colours for theme change
     try{ applyNodeThemeColors(theme); }catch(err){/* graceful */}
+    try{ applyCoreTheme(theme); }catch(err){/* graceful */}
   });
 })();
