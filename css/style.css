@@ -227,6 +227,59 @@ nav{display:flex;align-items:center;justify-content:space-between;}
   transition:border-color .3s, background .3s, transform .3s var(--ease), color .3s;
 }
 .btn-ghost:hover{border-color:var(--surface-hover);background:var(--surface-2);transform:translateY(-3px);}
+
+/* ===================== HERO BACKGROUND STATEMENT TEXT ===================== */
+.hero-visual{
+  position:relative;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:70px;
+  padding:0 24px;
+  margin-top:14px;
+  z-index:2;
+  pointer-events:none;
+  overflow:hidden;
+}
+.hero-visual .hv-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.hero-visual .hv-blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.22;}
+.hero-visual .hv-blob-1{width:320px;height:320px;background:var(--blue-bright);top:-60%;left:14%;}
+.hero-visual .hv-blob-2{width:340px;height:340px;background:var(--orange-bright);top:-55%;right:14%;}
+
+.hero-bg-text{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:100%;
+  text-align:center;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:clamp(18px, 3.2vw, 40px);
+  line-height:1.1;
+  margin:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  background:linear-gradient(90deg,
+    var(--slate-dim) 0%, var(--blue-bright) 22%, var(--orange-bright) 45%,
+    var(--slate-dim) 60%, var(--blue-bright) 82%, var(--orange-bright) 100%);
+  background-size:260% 100%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  opacity:0.6;
+  animation:heroBgShimmer 9s linear infinite;
+}
+@keyframes heroBgShimmer{
+  0%{background-position:260% 0;}
+  100%{background-position:-260% 0;}
+}
+@media (max-width:640px){
+  .hero-bg-text{white-space:normal;font-size:clamp(15px,4.6vw,22px);}
+  .hero-visual{min-height:auto;}
+}
+
 .hero-stats{
   position:relative;z-index:3;
   display:flex;justify-content:center;gap:0;flex-wrap:wrap;
