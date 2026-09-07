@@ -77,42 +77,33 @@
       <form class="reveal" id="contactForm">
         <div class="form-grid">
           <div class="field"><label>Full name *</label><input type="text" name="name" required placeholder="Full Name"></div>
-          <div class="field"><label>Work email *</label><input type="email" name="email" required placeholder="Email ID"></div>
-          <div class="field"><label>Contact no.</label><input type="tel" name="phone" placeholder="Contact Number"></div>
+          <div class="field">
+            <label>Work email *</label>
+            <input type="email" name="email" id="formEmail" required placeholder="name@company.com" pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" title="Please enter a valid email address with '@' (e.g. name@company.com)">
+          </div>
+          <div class="field">
+            <label>Contact no. <small style="font-size:11px;color:var(--slate-dim);">(+country code &amp; 10 digits)</small></label>
+            <input type="tel" name="phone" id="formPhone" placeholder="+91 98765 43210" pattern="^\+[0-9]{1,4}[-\s]?[0-9]{10}$" title="Format: +&lt;country code&gt; &lt;10-digit number&gt; (e.g. +91 9876543210)">
+          </div>
           <div class="field"><label>Company</label><input type="text" name="company" placeholder="Company name"></div>
           <div class="field full">
             <label>Service needed</label>
             <select name="service">
               <option value="">— Select a service —</option>
-              <option>Web Application Development</option>
-              <option>Mobile App Development</option>
-              <option>Cloud &amp; DevOps Engineering</option>
-              <option>AI &amp; Machine Learning</option>
-              <option>Cybersecurity &amp; VAPT</option>
-              <option>Enterprise Software</option>
-              <option>Data Engineering</option>
-              <option>UI/UX &amp; Product Design</option>
-              <option>QA &amp; Test Automation</option>
-              <option>IT Strategy &amp; Consultancy</option>
-              <option>System Integration &amp; APIs</option>
-              <option>Managed IT Support &amp; AMC</option>
-              <option>Data Centre Setup</option>
-              <option>Wired &amp; Wireless Networks</option>
-              <option>Power Backup Solutions</option>
-              <option>IT Infrastructure Solutions</option>
-              <option>Network Security Solutions</option>
-              <option>IT Audit Services</option>
-              <option>Data &amp; Voice Projects</option>
-              <option>Security Surveillance (CCTV)</option>
-              <option>Server &amp; Network Enclosure</option>
-              <option>AV Solutions</option>
-              <option>VoIP &amp; Telephony Solutions</option>
-              <option>Structured Cabling Solutions</option>
-              <option>AMC Services</option>
-              <option>Network Designing</option>
-              <option>Facility Management Services</option>
-              <option>Network Consultancy Services</option>
-              <option>Something else</option>
+              <optgroup label="Software &amp; Digital Engineering">
+                <option value="Web &amp; Mobile App Development">Web &amp; Mobile App Development</option>
+                <option value="Cloud &amp; DevOps Engineering">Cloud &amp; DevOps Engineering</option>
+                <option value="AI &amp; Intelligent Automation">AI &amp; Intelligent Automation</option>
+              </optgroup>
+              <optgroup label="IT Infrastructure &amp; Networking">
+                <option value="Enterprise Networking &amp; Wireless">Enterprise Networking &amp; Wireless Infrastructure</option>
+                <option value="Data Centre Build &amp; Structured Cabling">Data Centre Build &amp; Structured Cabling</option>
+                <option value="Cybersecurity, Network Defense &amp; VAPT">Cybersecurity, Network Defense &amp; VAPT</option>
+                <option value="Smart Surveillance &amp; Workplace AV">Smart Surveillance (CCTV) &amp; Workplace AV</option>
+                <option value="Managed IT, AMC &amp; Facility Operations">Managed IT, AMC &amp; Facility Operations</option>
+                <option value="Unified Network &amp; DCIM Monitoring">Unified Network &amp; Data Center Monitoring (DCIM)</option>
+              </optgroup>
+              <option value="Something else">Something else / General Consultation</option>
             </select>
           </div>
           <div class="field full"><label>Your requirement *</label><textarea name="message" required placeholder="What are you trying to build or fix?"></textarea></div>
@@ -129,12 +120,47 @@
         var form = document.getElementById('contactForm');
         var btn  = document.getElementById('submitBtn');
         var msg  = document.getElementById('formMsg');
+        var phoneInput = document.getElementById('formPhone');
+        var emailInput = document.getElementById('formEmail');
         var ENDPOINT = 'https://api.web3forms.com/submit';
         var DEFAULT_MSG = 'We reply within one business day. No spam, no auto-dialled sales calls.';
         var MAILTO_FALLBACK = '<a href="mailto:info@jsalphasoft.com" style="color:#FF4B00;text-decoration:underline;">email us directly at info@jsalphasoft.com</a>';
 
+        // Auto-format phone input with leading '+'
+        if(phoneInput){
+          phoneInput.addEventListener('input', function(e){
+            var val = phoneInput.value.trim();
+            if(val && !val.startsWith('+')){
+              phoneInput.value = '+' + val.replace(/[^\d\s-]/g, '');
+            } else {
+              phoneInput.value = val.replace(/[^\d+\s-]/g, '');
+            }
+          });
+        }
+
         form.addEventListener('submit', function(e){
           e.preventDefault();
+
+          // Validate email contains @ and domain
+          if(emailInput && (!emailInput.value.includes('@') || !emailInput.checkValidity())){
+            emailInput.focus();
+            msg.textContent = 'Please enter a valid work email with "@" (e.g. name@company.com)';
+            msg.style.color = '#FF4B00';
+            return;
+          }
+
+          // Validate phone number format if provided
+          if(phoneInput && phoneInput.value.trim() !== ''){
+            var cleanedPhone = phoneInput.value.replace(/[\s-]/g, '');
+            var phoneRegex = /^\+[0-9]{1,4}[0-9]{10}$/;
+            if(!phoneRegex.test(cleanedPhone)){
+              phoneInput.focus();
+              msg.textContent = 'Please enter contact number with +country code and 10 digits (e.g. +91 9876543210)';
+              msg.style.color = '#FF4B00';
+              return;
+            }
+          }
+
           if(form.querySelector('[name=botcheck]').checked){ return; } // honeypot caught a bot
           btn.disabled = true;
           btn.textContent = 'Sending\u2026';
@@ -149,7 +175,6 @@
           })
           .then(function(r){ return r.json().then(function(json){ return {status:r.status, ok:r.ok, json:json}; }); })
           .then(function(res){
-            // Log the raw response so it can be inspected in DevTools if something looks off.
             console.log('[contact form] Web3Forms response:', res.status, res.json);
 
             if(res.ok && res.json && res.json.success){
