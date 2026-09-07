@@ -153,10 +153,45 @@ document.querySelectorAll('[data-tilt]').forEach(card=>{
   });
 
   // Auto-expand and scroll if URL links directly to a service hash
+  const HASH_ALIASES = {
+    // Software & Digital Engineering aliases
+    'web-development': 'web-application-development',
+    'mobile-app-development': 'web-application-development',
+    'enterprise-software': 'web-application-development',
+    'system-integration-and-apis': 'web-application-development',
+    'cloud-devops-engineering': 'cloud-and-devops-engineering',
+    'ai-machine-learning': 'ai-and-machine-learning',
+    'data-engineering-and-analytics': 'ai-and-machine-learning',
+
+    // IT Infrastructure & Networking aliases
+    'network-designing': 'wired-and-wireless-networks',
+    'network-consultancy-services': 'wired-and-wireless-networks',
+    'server-and-network-enclosure': 'data-centre-setup',
+    'structured-cabling-solutions': 'data-centre-setup',
+    'power-backup-solutions': 'data-centre-setup',
+    'network-security-solutions': 'it-audit-cyber-security-vapt',
+    'cybersecurity-vapt': 'it-audit-cyber-security-vapt',
+    'av-solutions': 'security-surveillance-cctv',
+    'it-infrastructure-solutions': 'facility-management-services',
+    'amc-services': 'facility-management-services',
+    'managed-it-support-and-amc': 'facility-management-services',
+    'network-monitoring': 'unified-network-monitoring',
+    'unified-network-monitoring-solution': 'unified-network-monitoring',
+    'dcim': 'unified-network-monitoring',
+    'dcim-monitoring': 'unified-network-monitoring',
+    'data-center-monitoring': 'unified-network-monitoring',
+    'datacenter-monitoring': 'unified-network-monitoring',
+    'data-center-monitoring-information-system': 'unified-network-monitoring'
+  };
+
   function checkHash(){
     if(!window.location.hash) return;
-    const targetId = window.location.hash.substring(1);
-    const targetEl = document.getElementById(targetId);
+    let targetId = window.location.hash.substring(1);
+    let targetEl = document.getElementById(targetId);
+    if(!targetEl && HASH_ALIASES[targetId]){
+      targetId = HASH_ALIASES[targetId];
+      targetEl = document.getElementById(targetId);
+    }
     if(targetEl){
       const parentGroup = targetEl.closest('.svc-accordion-group');
       if(parentGroup){
