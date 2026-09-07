@@ -116,6 +116,69 @@ document.querySelectorAll('[data-tilt]').forEach(card=>{
   card.addEventListener('mouseleave', ()=>{ card.style.transform=''; });
 });
 
+/* ===================== SERVICES COLLAPSIBLE ACCORDION ===================== */
+(function(){
+  const accordionGroups = document.querySelectorAll('.svc-accordion-group');
+  if(!accordionGroups.length) return;
+
+  function revealChildren(group){
+    group.querySelectorAll('.fly-in, .reveal').forEach(child=>{
+      child.classList.add('in');
+    });
+  }
+
+  accordionGroups.forEach(group=>{
+    const trigger = group.querySelector('.svc-group-head');
+    if(!trigger) return;
+
+    // Trigger fly-in animation for children on hover
+    group.addEventListener('mouseenter', ()=>{
+      revealChildren(group);
+    });
+
+    // Toggle on click or keyboard enter
+    function toggle(){
+      const isOpen = group.classList.toggle('is-open');
+      trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      if(isOpen) revealChildren(group);
+    }
+
+    trigger.addEventListener('click', toggle);
+    trigger.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        toggle();
+      }
+    });
+  });
+
+  // Auto-expand and scroll if URL links directly to a service hash
+  function checkHash(){
+    if(!window.location.hash) return;
+    const targetId = window.location.hash.substring(1);
+    const targetEl = document.getElementById(targetId);
+    if(targetEl){
+      const parentGroup = targetEl.closest('.svc-accordion-group');
+      if(parentGroup){
+        parentGroup.classList.add('is-open');
+        const trigger = parentGroup.querySelector('.svc-group-head');
+        if(trigger) trigger.setAttribute('aria-expanded', 'true');
+        revealChildren(parentGroup);
+        setTimeout(()=>{
+          targetEl.scrollIntoView({behavior:'smooth', block:'start'});
+        }, 200);
+      }
+    }
+  }
+
+  window.addEventListener('hashchange', checkHash);
+  if(document.readyState === 'complete' || document.readyState === 'interactive'){
+    setTimeout(checkHash, 100);
+  } else {
+    window.addEventListener('DOMContentLoaded', checkHash);
+  }
+})();
+
 /* ===================== FLOATING CONTACT BUTTON ===================== */
 (function(){
   /* ── configuration ── */
