@@ -803,10 +803,10 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;background:var(--nav
 .next-link .nl-txt small{display:block;font-family:'JetBrains Mono';font-size:10.5px;color:var(--slate-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
 .next-link .nl-txt strong{font-family:'Space Grotesk';color:var(--heading);font-size:18px;font-weight:600;}
 .next-link .arrow{font-size:20px;color:var(--blue-bright);transition:transform .3s var(--ease);flex-shrink:0;}
-.next-link:hover .arrow{transform:translateX(6px);}
+.next-link:hover .arrow{transform:translateX(-6px);}
 .next-link.align-right{flex-direction:row-reverse;text-align:right;}
-.next-link.align-right .arrow{transform:scaleX(-1);}
-.next-link.align-right:hover .arrow{transform:scaleX(-1) translateX(6px);}
+.next-link.align-right .arrow{transform:none;}
+.next-link.align-right:hover .arrow{transform:translateX(6px);}
 
 /* ===================== SERVICES DETAIL PAGE ===================== */
 .svc-detail-list{display:flex;flex-direction:column;}
